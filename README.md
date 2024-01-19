@@ -1,4 +1,4 @@
-# BMI Calculator
+# Weather Project
 
 Проект представляет собой Weather.
 
