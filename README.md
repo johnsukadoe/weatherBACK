@@ -32,6 +32,6 @@ nodemon index.js
 ### Для map использована библиотека Leaflet
 [Leaflet](https://leafletjs.com/index.html)
 
+![image](https://github.com/johnsukadoe/weatherBACK/assets/116514476/4b928622-c7be-4e72-a742-b16d33d36590)
 
-![image](https://github.com/johnsukadoe/weatherBACK/assets/116514476/d3a5a09e-b308-462b-ae48-c988c3941bb7)
 
