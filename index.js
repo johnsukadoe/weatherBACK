@@ -1,81 +1,87 @@
-const express = require('express');
-const axios = require('axios');
+const button = document.getElementById('buttonWeather')
+button.addEventListener('click', getWeather)
 
-const app = express();
-const port = 3000;
+async function getWeather() {
+  const cityInput = document.getElementById('cityInput');
+  const cityName = cityInput.value;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+  if (!cityName) {
+    alert('Please enter a city name');
+    return;
+  }
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  next();
-});
-
-const apiKey = '394f7ad19bb5c5525c4ddb18324358d7';
-//GtZNuWgkB1bJn4kjXYVWmQ==xRl5srEeKmlP9QEq
-
-app.get('/weather', async (req, res) => {
   try {
-    const cityName = req.query.city;
+    const response = await fetch(`http://localhost:3000/weather?city=${cityName}`);
+    const data = await response.json();
 
-    if (!cityName) {
-      return res.status(400).json({ error: 'City name missing' });
+    if (response.ok) {
+      console.log(data);
+
+      displayWeather(data.weather);
+      displayTimezone(data.timezone)
+      displayAirport(data.airport)
+    } else {
+      alert(`Error: ${data.error}`);
     }
-
-    const weatherResponse = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}`);
-    const weatherData = weatherResponse.data;
-
-    
-    let timezoneData;
-    await axios.get(`https://api.api-ninjas.com/v1/timezone?city=${cityName}`, {
-      headers: {
-        'X-Api-Key': 'GtZNuWgkB1bJn4kjXYVWmQ==xRl5srEeKmlP9QEq'
-      }
-    })
-    .then(response => {
-      timezoneData = response.data
-    })
-    .catch(error => {
-      if (error.response) {
-        console.error('Error:', error.response.status, error.response.data);
-      } else {
-        console.error('Request failed:', error.message);
-      }
-    });
-
-
-    let airportStatic;
-    try {
-      const response = await axios.get(`https://api.api-ninjas.com/v1/airports?city=${cityName}`, {
-        headers: {
-          'X-Api-Key': 'GtZNuWgkB1bJn4kjXYVWmQ==xRl5srEeKmlP9QEq'
-        }
-      });
-  
-      if (response.status === 200) {
-        airportStatic = response.data;
-        console.log(response.data);
-      } else {
-        console.error('Error:', response.status, response.data);
-      }
-    } catch (error) {
-      if (error.response) {
-        console.error('Error:', error.response.status, error.response.data);
-      } else {
-        console.error('Request failed:', error.message);
-      }
-    }
-    
-
-    res.json({ weather: weatherData, timezone:timezoneData, airport:airportStatic });
   } catch (error) {
     console.error('Error fetching weather data:', error.message);
-    res.status(500).json({ error: 'Internal server error' });
+    alert('Internal server error');
   }
-});
+}
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+let mapContainer;
+function displayWeather(weatherData) {
+  const weatherInfoContainer = document.getElementById('weather-info');
+  const temperature = weatherData.main.temp;
+  const description = weatherData.weather[0].description;
+
+  const html = `
+      <h2>Weather in ${weatherData.name}</h2>
+      <p>Temperature: ${temperature} K</p>
+      <p>Description: ${description}</p>
+  `;
+
+  weatherInfoContainer.innerHTML = html;
+
+  if (!mapContainer) {
+      mapContainer = L.map('map').setView([weatherData.coord.lat, weatherData.coord.lon], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapContainer);
+  } else {
+      mapContainer.setView([weatherData.coord.lat, weatherData.coord.lon], 13);
+  }
+
+  const marker = L.marker([weatherData.coord.lat, weatherData.coord.lon]).addTo(mapContainer);
+  marker.bindPopup(`Weather in ${weatherData.name}: ${description}, Temperature: ${temperature} K`).openPopup();
+}
+
+function displayTimezone(timezoneData){
+  const timezoneContainer = document.getElementById('city-timezone');
+  const timezone = timezoneData.timezone;
+
+  const html = `
+      <h2>Timezone</h2>
+      <p>${timezone} K</p>
+  `;
+
+  timezoneContainer.innerHTML = html;
+}
+function displayAirport(airports) {
+  const airportContainer = document.getElementById('airport');
+  
+  airportContainer.innerHTML = '';
+
+  airports.forEach(airport => {
+      const html = `
+          <div>
+              <h2>Airport Info:</h2>
+              <p>ICAO: ${airport.icao}</p>
+              <p>IATA: ${airport.iata}</p>
+              <p>Name: ${airport.name}</p>
+              <p>Country: ${airport.country}</p>
+              <p>Elevation (ft): ${airport.elevation_ft}</p>
+          </div>
+      `;
+
+      airportContainer.innerHTML += html;
+  });
+}

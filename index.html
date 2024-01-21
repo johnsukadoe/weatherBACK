@@ -31,7 +31,7 @@
   <h1>Weather App</h1>
   <label for="cityInput">Enter city:</label>
   <input type="text" id="cityInput" placeholder="City name">
-  <button onclick="getWeather()">Get Weather</button>
+  <button id="buttonWeather">Get Weather</button>
 
   <div style="display: flex; flex-direction: row; justify-content: center; gap: 50px;">
     <div id="weather-info"></div>
@@ -40,87 +40,7 @@
   </div>
 
   <div id="map" style="height: 400px;"></div>
-
-
-  <script>
-    async function getWeather() {
-      const cityInput = document.getElementById('cityInput');
-      const cityName = cityInput.value;
-
-      if (!cityName) {
-        alert('Please enter a city name');
-        return;
-      }
-
-      try {
-        const response = await fetch(`http://localhost:3000/weather?city=${cityName}`);
-        const data = await response.json();
-
-        if (response.ok) {
-          console.log(data);
-
-          displayWeather(data.weather);
-          displayTimezone(data.timezone)
-          displayAirport(data.airport)
-        } else {
-          alert(`Error: ${data.error}`);
-        }
-      } catch (error) {
-        console.error('Error fetching weather data:', error.message);
-        alert('Internal server error');
-      }
-    }
-
-    function displayWeather(weatherData) {
-        const weatherInfoContainer = document.getElementById('weather-info');
-        const temperature = weatherData.main.temp;
-        const description = weatherData.weather[0].description;
-
-        const html = `
-            <h2>Weather in ${weatherData.name}</h2>
-            <p>Temperature: ${temperature} K</p>
-            <p>Description: ${description}</p>
-        `;
-
-        weatherInfoContainer.innerHTML = html;
-
-        const mapContainer = L.map('map').setView([weatherData.coord.lat, weatherData.coord.lon], 13);
-        const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapContainer);
-
-        const marker = L.marker([weatherData.coord.lat, weatherData.coord.lon]).addTo(mapContainer);
-        marker.bindPopup(`Weather in ${weatherData.name}: ${description}, Temperature: ${temperature} K`).openPopup();
-    }
-
-    function displayTimezone(timezoneData){
-      const timezoneContainer = document.getElementById('city-timezone');
-      const timezone = timezoneData.timezone;
-
-      const html = `
-          <h2>Timezone</h2>
-          <p>${timezone} K</p>
-      `;
-
-      timezoneContainer.innerHTML = html;
-    }
-
-    function displayAirport(airport){
-      const airportContainer = document.getElementById('airport');
-      airport.forEach(airport => {
-        const html = `
-          <div>
-            <h2>Airport Info:</h2>
-            <p>ICAO: ${airport.icao}</p>
-            <p>IATA: ${airport.iata}</p>
-            <p>Name: ${airport.name}</p>
-            <p>Country: ${airport.country}</p>
-            <p>Elevation (ft): ${airport.elevation_ft}</p>
-          </div>
-        `;
-
-        airportContainer.innerHTML += html;
-      });
-    }
-
-  </script>
+  
+  <script src="index.js"></script>
 </body>
 </html>
